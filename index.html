@@ -64,160 +64,104 @@
     100% { background-position: 0 100px; }
   }
 
-  #overlay { position: fixed; inset: 0; z-index: 10; pointer-events: auto; }
+  #overlay { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
 
-  /* ── Dot (collapsed state) ── */
+  /* ── Bounding box ── */
   .box {
     position: absolute;
-    pointer-events: auto;
-    cursor: pointer;
-    will-change: left, top, width, height;
-    transition: left 0.5s cubic-bezier(0.25,0.1,0.25,1),
-                top  0.5s cubic-bezier(0.25,0.1,0.25,1),
-                width 0.5s cubic-bezier(0.25,0.1,0.25,1),
-                height 0.5s cubic-bezier(0.25,0.1,0.25,1);
-  }
-
-  /* The white circle that sits at center of bbox */
-  .dot {
-    position: absolute;
-    width: 18px; height: 18px;
-    background: #fff;
-    border-radius: 50%;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 0 3px rgba(255,255,255,0.25);
-    transition: opacity 0.3s ease, transform 0.3s ease;
     pointer-events: none;
-  }
-
-  /* The square frame — hidden by default */
-  .frame {
-    position: absolute;
-    inset: 0;
-    border-radius: 8px;
-    border: 2px solid #fff;
-    opacity: 0;
-    transition: opacity 0.35s ease, border-radius 0.35s ease;
-    pointer-events: none;
+    /* Быстрое следование — 0.1s */
+    transition: left 0.1s linear, top 0.1s linear,
+                width 0.1s linear, height 0.1s linear,
+                opacity 0.25s ease;
   }
 
   /* Corner brackets */
-  .frame::before, .frame::after,
-  .corner-tr, .corner-bl {
-    content: '';
+  .corner-tl, .corner-tr, .corner-bl, .corner-br {
     position: absolute;
     width: 14px; height: 14px;
-    border-color: #fff;
     border-style: solid;
+    border-color: var(--color);
   }
-  .frame::before {
-    top: -2px; left: -2px;
-    border-width: 3px 0 0 3px;
-    border-top-left-radius: 6px;
-  }
-  .frame::after {
-    bottom: -2px; right: -2px;
-    border-width: 0 3px 3px 0;
-    border-bottom-right-radius: 6px;
-  }
-  .corner-tr {
-    position: absolute;
-    top: -2px; right: -2px;
-    border-width: 3px 3px 0 0;
-    border-top-right-radius: 6px;
-  }
-  .corner-bl {
-    position: absolute;
-    bottom: -2px; left: -2px;
-    border-width: 0 0 3px 3px;
-    border-bottom-left-radius: 6px;
-  }
+  .corner-tl { top:-2px; left:-2px;  border-width:3px 0 0 3px; border-top-left-radius:5px; }
+  .corner-tr { top:-2px; right:-2px; border-width:3px 3px 0 0; border-top-right-radius:5px; }
+  .corner-bl { bottom:-2px; left:-2px;  border-width:0 0 3px 3px; border-bottom-left-radius:5px; }
+  .corner-br { bottom:-2px; right:-2px; border-width:0 3px 3px 0; border-bottom-right-radius:5px; }
 
-  /* Fill tint — hidden by default */
+  /* Fill tint */
   .box-fill {
     position: absolute;
     inset: 0;
-    border-radius: 6px;
-    background: rgba(255,255,255,0.07);
-    opacity: 0;
+    border-radius: 4px;
+    background: var(--color);
+    opacity: 0.05;
     pointer-events: none;
-    transition: opacity 0.35s ease;
   }
 
-  /* Label — hidden by default */
+  /* Label — всегда видна */
   .label {
     position: absolute;
-    top: -38px; left: 50%;
-    transform: translateX(-50%);
+    top: -34px; left: -2px;
     display: flex;
     align-items: center;
     gap: 5px;
     white-space: nowrap;
-    opacity: 0;
     pointer-events: none;
-    transition: opacity 0.35s ease, transform 0.35s ease;
-    transform: translateX(-50%) translateY(6px);
   }
 
   .label-text {
     background: var(--color);
     color: #000;
-    padding: 4px 10px 3px;
-    font-size: 12px;
+    padding: 3px 9px 3px;
+    font-size: 11px;
     font-weight: 700;
     border-radius: 5px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.07em;
     text-transform: uppercase;
-    box-shadow: 0 0 12px var(--color), 0 2px 8px rgba(0,0,0,0.4);
+    box-shadow: 0 0 10px var(--color), 0 2px 6px rgba(0,0,0,0.5);
   }
+
+  .label-emoji { font-size: 14px; }
 
   .label-conf {
     background: rgba(0,0,0,0.75);
-    color: #fff;
-    padding: 3px 7px;
+    color: rgba(255,255,255,0.85);
+    padding: 3px 6px;
     font-size: 10px;
     font-weight: 600;
     border-radius: 4px;
-    border: 1px solid rgba(255,255,255,0.3);
-    letter-spacing: 0.05em;
-    transition: opacity 0.6s ease;
+    border: 1px solid rgba(255,255,255,0.2);
+    letter-spacing: 0.04em;
+    transition: opacity 0.5s ease;
   }
 
-  .label-emoji {
-    font-size: 15px;
-  }
-
-  /* Pulse ring on dot */
+  /* Pulse ring */
   .pulse-ring {
     position: absolute;
-    width: 18px; height: 18px;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    border: 1.5px solid rgba(255,255,255,0.6);
+    inset: -6px;
+    border-radius: 10px;
+    border: 1px solid var(--color);
     opacity: 0;
     pointer-events: none;
-    animation: dotPulse 2.5s ease-out infinite;
+    animation: pulseRing 2.5s ease-out infinite;
   }
-  @keyframes dotPulse {
-    0%   { width: 18px; height: 18px; opacity: 0.7; }
-    100% { width: 44px; height: 44px; opacity: 0; }
+  @keyframes pulseRing {
+    0%   { inset: -3px; opacity: 0.5; }
+    100% { inset: -18px; opacity: 0; }
   }
-
-  /* ── EXPANDED state (tapped) ── */
-  .box.expanded .dot        { opacity: 0; transform: translate(-50%,-50%) scale(0.3); }
-  .box.expanded .frame      { opacity: 1; }
-  .box.expanded .box-fill   { opacity: 1; }
-  .box.expanded .label      { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .box.expanded .pulse-ring { animation: none; opacity: 0; }
 
   /* Appear / disappear */
   @keyframes boxAppear {
-    0%   { opacity: 0; transform: scale(0.5); }
-    70%  { opacity: 1; transform: scale(1.1); }
+    0%   { opacity: 0; transform: scale(0.75); }
+    65%  { opacity: 1; transform: scale(1.03); }
     100% { opacity: 1; transform: scale(1); }
   }
+  @keyframes boxDisappear {
+    0%   { opacity: 1; }
+    100% { opacity: 0; transform: scale(0.8); }
+  }
+  .box.entering { animation: boxAppear 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+  .box.leaving  { animation: boxDisappear 0.2s ease-in forwards; }
   @keyframes boxDisappear {
     0%   { opacity: 1; }
     100% { opacity: 0; transform: scale(0.6); }
@@ -641,7 +585,7 @@ async function detect() {
   if (model && video.readyState === 4 && video.videoWidth > 0) {
     let preds;
     try {
-      preds = await model.detect(video, 12, 0.70);
+      preds = await model.detect(video, 10, 0.75);
     } catch(e) {
       requestAnimationFrame(detect);
       return;
@@ -651,7 +595,8 @@ async function detect() {
     const vArea = video.videoWidth * video.videoHeight;
     const filtered = preds.filter(p => {
       const area = (p.bbox[2] * p.bbox[3]) / vArea;
-      return area > 0.002 && area < 0.90;
+      const minSide = Math.min(p.bbox[2], p.bbox[3]);
+      return area > 0.015 && area < 0.88 && minSide > 30;
     });
 
     updateRegistry(filtered, now);
@@ -745,26 +690,17 @@ function updateRegistry(predictions, now) {
     el.style.setProperty('--fill', entry.color);
     el.style.borderColor = entry.color;
     el.innerHTML = `
-      <div class="dot"></div>
-      <div class="pulse-ring"></div>
-      <div class="frame">
-        <span class="corner-tr"></span>
-        <span class="corner-bl"></span>
-      </div>
       <div class="box-fill"></div>
+      <div class="pulse-ring"></div>
+      <span class="corner-tl"></span>
+      <span class="corner-tr"></span>
+      <span class="corner-bl"></span>
+      <span class="corner-br"></span>
       <div class="label">
         <span class="label-emoji">${entry.emoji}</span>
         <span class="label-text" style="background:${entry.color}">${entry.ru}</span>
         <span class="label-conf">${conf}%</span>
       </div>`;
-
-    // Tap to expand/collapse
-    el.addEventListener('click', (e) => {
-      e.stopPropagation();
-      // collapse all others
-      document.querySelectorAll('.box.expanded').forEach(b => { if (b !== el) b.classList.remove('expanded'); });
-      el.classList.toggle('expanded');
-    });
     overlay.appendChild(el);
 
     el.style.left   = (p.bbox[0] * sw) + 'px';
@@ -831,11 +767,6 @@ function addTick(entry, conf) {
     }, 500);
   }, 3000);
 }
-
-// Close all expanded boxes when tapping background
-overlay.addEventListener('click', () => {
-  document.querySelectorAll('.box.expanded').forEach(b => b.classList.remove('expanded'));
-});
 
 // ──────────────────────────────────────────────
 //  GO
