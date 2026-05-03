@@ -640,90 +640,122 @@ async function detect() {
 }
 
 // ──────────────────────────────────────────────
-//  REGISTRY UPDATE
+//  IoU HELPER
+// ──────────────────────────────────────────────
+function iou(a, b) {
+  const ax1 = a[0], ay1 = a[1], ax2 = a[0]+a[2], ay2 = a[1]+a[3];
+  const bx1 = b[0], by1 = b[1], bx2 = b[0]+b[2], by2 = b[1]+b[3];
+  const ix = Math.max(0, Math.min(ax2,bx2) - Math.max(ax1,bx1));
+  const iy = Math.max(0, Math.min(ay2,by2) - Math.max(ay1,by1));
+  const inter = ix * iy;
+  if (inter === 0) return 0;
+  return inter / (a[2]*a[3] + b[2]*b[3] - inter);
+}
+
+let trackIdCounter = 0;
+
+// ──────────────────────────────────────────────
+//  REGISTRY UPDATE — IoU Tracker
 // ──────────────────────────────────────────────
 function updateRegistry(predictions, now) {
   const sw = video.offsetWidth  / video.videoWidth;
   const sh = video.offsetHeight / video.videoHeight;
 
-  const active = new Set();
+  const matched = new Set(); // trackId уже совпавших треков
+  const usedPreds = new Set();
 
-  predictions.forEach(p => {
-    // Grid-based ID — крупная сетка чтобы не кучиться
-    const gridX = Math.round(p.bbox[0] / 120);
-    const gridY = Math.round(p.bbox[1] / 120);
-    const id = `${p.class}-${gridX}-${gridY}`;
-    active.add(id);
+  // 1. Матчим предикции к существующим трекам по IoU
+  for (const [trackId, data] of registry) {
+    let bestScore = 0;
+    let bestPred = null;
+    let bestIdx = -1;
 
-    const entry  = getEntry(p.class);
-    const conf   = Math.round(p.score * 100);
-    const isNew  = !seenClasses.has(p.class);
-
-    let data = registry.get(id);
-
-    if (!data) {
-      // Create element
-      const el = document.createElement('div');
-      el.className = 'box entering';
-      el.style.setProperty('--color', entry.color);
-      el.style.setProperty('--fill', entry.color);
-      el.style.borderColor = entry.color;
-      el.innerHTML = `
-        <div class="box-fill"></div>
-        <div class="pulse-ring"></div>
-        <span class="corner-tr"></span>
-        <span class="corner-bl"></span>
-        <div class="label">
-          <span class="label-emoji">${entry.emoji}</span>
-          <span class="label-text" style="background:${entry.color}">${entry.ru}</span>
-          <span class="label-conf" style="color:${entry.color};border-color:${entry.color}">${conf}%</span>
-        </div>`;
-      overlay.appendChild(el);
-      data = { el, lastSeen: now, cls: p.class };
-      registry.set(id, data);
-
-      // Flash effect
-      triggerFlash();
-
-      // Ticker
-      if (isNew) {
-        seenClasses.add(p.class);
-        addTick(entry, conf);
+    predictions.forEach((p, i) => {
+      if (usedPreds.has(i)) return;
+      if (p.class !== data.cls) return;
+      const overlap = iou(p.bbox, data.bbox);
+      if (overlap > bestScore) {
+        bestScore = overlap;
+        bestPred = p;
+        bestIdx = i;
       }
+    });
 
-      // Remove entering class after animation
-      setTimeout(() => el.classList.remove('entering'), 400);
-    } else {
-      // Update confidence label
+    // Порог совпадения — 0.15 (мягкий, т.к. камера двигается)
+    if (bestPred && bestScore > 0.15) {
+      matched.add(trackId);
+      usedPreds.add(bestIdx);
+
+      // Обновляем трек
+      data.lastSeen = now;
+      data.bbox = bestPred.bbox;
+
+      // Плавное смещение позиции
+      data.el.style.left   = (bestPred.bbox[0] * sw) + 'px';
+      data.el.style.top    = (bestPred.bbox[1] * sh) + 'px';
+      data.el.style.width  = (bestPred.bbox[2] * sw) + 'px';
+      data.el.style.height = (bestPred.bbox[3] * sh) + 'px';
+
+      const conf = Math.round(bestPred.score * 100);
       const confEl = data.el.querySelector('.label-conf');
       if (confEl) confEl.textContent = conf + '%';
     }
+  }
 
-    data.lastSeen = now;
+  // 2. Несовпавшие предикции → новые треки
+  predictions.forEach((p, i) => {
+    if (usedPreds.has(i)) return;
 
-    // Position
-    data.el.style.left   = (p.bbox[0] * sw) + 'px';
-    data.el.style.top    = (p.bbox[1] * sh) + 'px';
-    data.el.style.width  = (p.bbox[2] * sw) + 'px';
-    data.el.style.height = (p.bbox[3] * sh) + 'px';
+    const trackId = 'track_' + (trackIdCounter++);
+    const entry = getEntry(p.class);
+    const conf  = Math.round(p.score * 100);
+    const isNew = !seenClasses.has(p.class);
+
+    const el = document.createElement('div');
+    el.className = 'box entering';
+    el.style.setProperty('--color', entry.color);
+    el.style.setProperty('--fill', entry.color);
+    el.style.borderColor = entry.color;
+    el.innerHTML = `
+      <div class="box-fill"></div>
+      <div class="pulse-ring"></div>
+      <span class="corner-tr"></span>
+      <span class="corner-bl"></span>
+      <div class="label">
+        <span class="label-emoji">${entry.emoji}</span>
+        <span class="label-text" style="background:${entry.color}">${entry.ru}</span>
+        <span class="label-conf" style="color:${entry.color};border-color:${entry.color}">${conf}%</span>
+      </div>`;
+    overlay.appendChild(el);
+
+    el.style.left   = (p.bbox[0] * sw) + 'px';
+    el.style.top    = (p.bbox[1] * sh) + 'px';
+    el.style.width  = (p.bbox[2] * sw) + 'px';
+    el.style.height = (p.bbox[3] * sh) + 'px';
+
+    registry.set(trackId, { el, lastSeen: now, cls: p.class, bbox: p.bbox });
+
+    triggerFlash();
+    if (isNew) { seenClasses.add(p.class); addTick(entry, conf); }
+    setTimeout(() => el.classList.remove('entering'), 400);
   });
 
-  // Remove stale boxes
-  for (const [id, data] of registry) {
-    if (!active.has(id) && now - data.lastSeen > 500) {
+  // 3. Удаляем треки которые давно не видели
+  for (const [trackId, data] of registry) {
+    if (!matched.has(trackId) && now - data.lastSeen > 500) {
       const el = data.el;
       el.classList.add('leaving');
-      registry.delete(id);
+      registry.delete(trackId);
       setTimeout(() => el.remove(), 300);
     }
   }
 
-  // Update count
+  // Счётчик
   const count = registry.size;
   if (count !== prevCount) {
     countEl.textContent = count;
     countEl.classList.remove('bump');
-    void countEl.offsetWidth; // reflow
+    void countEl.offsetWidth;
     countEl.classList.add('bump');
     prevCount = count;
   }
