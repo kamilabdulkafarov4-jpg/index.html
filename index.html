@@ -29,7 +29,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    filter: saturate(1.1) contrast(1.05);
+    filter: none;
   }
 
   /* Vignette overlay */
@@ -73,8 +73,8 @@
     border-radius: 8px;
     pointer-events: none;
     will-change: transform, opacity;
-    transition: left 0.12s ease, top 0.12s ease,
-                width 0.12s ease, height 0.12s ease;
+    transition: left 0.35s ease, top 0.35s ease,
+                width 0.35s ease, height 0.35s ease;
   }
 
   /* Animated corner brackets */
@@ -425,106 +425,108 @@
 
 <script>
 // ──────────────────────────────────────────────
-//  DICTIONARY  (EN → emoji + RU name + color)
+//  DICTIONARY — все 90 классов COCO-SSD + бонус
 // ──────────────────────────────────────────────
 const DICT = {
-  // People & animals
-  'person':         { ru: 'ЧЕЛОВЕК',    emoji: '🧍', color: '#ff6b6b' },
-  'cat':            { ru: 'КОТ',        emoji: '🐱', color: '#ffb347' },
-  'dog':            { ru: 'СОБАКА',     emoji: '🐶', color: '#ffb347' },
-  'bird':           { ru: 'ПТИЦА',      emoji: '🐦', color: '#87ceeb' },
-  'horse':          { ru: 'ЛОШАДЬ',     emoji: '🐴', color: '#d4a96a' },
-  'sheep':          { ru: 'ОВЦА',       emoji: '🐑', color: '#e8e8d0' },
-  'cow':            { ru: 'КОРОВА',     emoji: '🐮', color: '#c4a35a' },
-  'elephant':       { ru: 'СЛОН',       emoji: '🐘', color: '#a8a8b0' },
-  'bear':           { ru: 'МЕДВЕДЬ',    emoji: '🐻', color: '#8b6914' },
-  'zebra':          { ru: 'ЗЕБРА',      emoji: '🦓', color: '#e0e0e0' },
-  'giraffe':        { ru: 'ЖИРАФ',      emoji: '🦒', color: '#f0a500' },
+  // Люди
+  'person':              { ru: 'ЧЕЛОВЕК',         emoji: '🧍', color: '#ff6b6b' },
 
-  // Furniture & home
-  'chair':          { ru: 'СТУЛ',       emoji: '🪑', color: '#00d4ff' },
-  'couch':          { ru: 'ДИВАН',      emoji: '🛋️',  color: '#00d4ff' },
-  'bed':            { ru: 'КРОВАТЬ',    emoji: '🛏️',  color: '#9b8fd4' },
-  'dining table':   { ru: 'СТОЛ',       emoji: '🪵', color: '#7ecba1' },
-  'toilet':         { ru: 'УНИТАЗ',     emoji: '🚽', color: '#aad4ff' },
-  'sink':           { ru: 'РАКОВИНА',   emoji: '🚿', color: '#7ecba1' },
-  'refrigerator':   { ru: 'ХОЛОДИЛЬНИК',emoji: '🧊', color: '#aad4ff' },
-  'oven':           { ru: 'ДУХОВКА',    emoji: '🥘', color: '#ff8c42' },
-  'microwave':      { ru: 'МИКРОВОЛНОВКА',emoji:'📡',color: '#00d4ff' },
-  'toaster':        { ru: 'ТОСТЕР',     emoji: '🍞', color: '#f4a460' },
+  // Транспорт
+  'bicycle':             { ru: 'ВЕЛОСИПЕД',        emoji: '🚲', color: '#2ed573' },
+  'car':                 { ru: 'МАШИНА',           emoji: '🚗', color: '#ff4757' },
+  'motorcycle':          { ru: 'МОТОЦИКЛ',         emoji: '🏍️', color: '#ff4757' },
+  'airplane':            { ru: 'САМОЛЁТ',          emoji: '✈️',  color: '#87ceeb' },
+  'bus':                 { ru: 'АВТОБУС',          emoji: '🚌', color: '#ffd700' },
+  'train':               { ru: 'ПОЕЗД',            emoji: '🚂', color: '#7f8fa6' },
+  'truck':               { ru: 'ГРУЗОВИК',         emoji: '🚚', color: '#ff6b35' },
+  'boat':                { ru: 'ЛОДКА',            emoji: '⛵', color: '#00d4ff' },
 
-  // Electronics
-  'tv':             { ru: 'ТВ',         emoji: '📺', color: '#00ff88' },
-  'laptop':         { ru: 'НОУТБУК',    emoji: '💻', color: '#00ff88' },
-  'cell phone':     { ru: 'ТЕЛЕФОН',    emoji: '📱', color: '#00ff88' },
-  'mouse':          { ru: 'МЫШКА',      emoji: '🖱️',  color: '#00ff88' },
-  'keyboard':       { ru: 'КЛАВА',      emoji: '⌨️',  color: '#00ff88' },
-  'remote':         { ru: 'ПУЛЬТ',      emoji: '📡', color: '#00ff88' },
-  'clock':          { ru: 'ЧАСЫ',       emoji: '🕐', color: '#ffd700' },
+  // Дорожные знаки
+  'traffic light':       { ru: 'СВЕТОФОР',         emoji: '🚦', color: '#ffd700' },
+  'fire hydrant':        { ru: 'ГИДРАНТ',          emoji: '🚒', color: '#ff4757' },
+  'stop sign':           { ru: 'СТОП',             emoji: '🛑', color: '#ff4757' },
+  'parking meter':       { ru: 'ПАРКОМАТ',         emoji: '🅿️',  color: '#00d4ff' },
+  'bench':               { ru: 'СКАМЕЙКА',         emoji: '🪑', color: '#d4a96a' },
 
-  // Food & drink
-  'apple':          { ru: 'ЯБЛОКО',     emoji: '🍎', color: '#ff4757' },
-  'banana':         { ru: 'БАНАН',      emoji: '🍌', color: '#ffd700' },
-  'orange':         { ru: 'АПЕЛЬСИН',   emoji: '🍊', color: '#ff8c00' },
-  'broccoli':       { ru: 'БРОККОЛИ',   emoji: '🥦', color: '#2ed573' },
-  'carrot':         { ru: 'МОРКОВЬ',    emoji: '🥕', color: '#ff6348' },
-  'hot dog':        { ru: 'ХОТДОГ',     emoji: '🌭', color: '#ff6b35' },
-  'pizza':          { ru: 'ПИЦЦА',      emoji: '🍕', color: '#ff6b35' },
-  'donut':          { ru: 'ПОНЧИК',     emoji: '🍩', color: '#ff69b4' },
-  'cake':           { ru: 'ТОРТ',       emoji: '🎂', color: '#ff69b4' },
-  'sandwich':       { ru: 'БУТЕРБРОД',  emoji: '🥪', color: '#d4b896' },
-  'wine glass':     { ru: 'БОКАЛ',      emoji: '🍷', color: '#c0392b' },
-  'cup':            { ru: 'КРУЖКА',     emoji: '☕', color: '#d4813c' },
-  'bottle':         { ru: 'БУТЫЛКА',    emoji: '🍾', color: '#7ecba1' },
-  'bowl':           { ru: 'МИСКА',      emoji: '🥣', color: '#7ecba1' },
-  'fork':           { ru: 'ВИЛКА',      emoji: '🍴', color: '#c0c0c0' },
-  'knife':          { ru: 'НОЖ',        emoji: '🔪', color: '#c0c0c0' },
-  'spoon':          { ru: 'ЛОЖКА',      emoji: '🥄', color: '#c0c0c0' },
+  // Животные
+  'bird':                { ru: 'ПТИЦА',            emoji: '🐦', color: '#87ceeb' },
+  'cat':                 { ru: 'КОТ',              emoji: '🐱', color: '#ffb347' },
+  'dog':                 { ru: 'СОБАКА',           emoji: '🐶', color: '#ffb347' },
+  'horse':               { ru: 'ЛОШАДЬ',           emoji: '🐴', color: '#d4a96a' },
+  'sheep':               { ru: 'ОВЦА',             emoji: '🐑', color: '#e8e8d0' },
+  'cow':                 { ru: 'КОРОВА',           emoji: '🐮', color: '#c4a35a' },
+  'elephant':            { ru: 'СЛОН',             emoji: '🐘', color: '#a8a8b0' },
+  'bear':                { ru: 'МЕДВЕДЬ',          emoji: '🐻', color: '#8b6914' },
+  'zebra':               { ru: 'ЗЕБРА',            emoji: '🦓', color: '#e0e0e0' },
+  'giraffe':             { ru: 'ЖИРАФ',            emoji: '🦒', color: '#f0a500' },
 
-  // Transport
-  'car':            { ru: 'МАШИНА',     emoji: '🚗', color: '#ff4757' },
-  'truck':          { ru: 'ГРУЗОВИК',   emoji: '🚚', color: '#ff6b35' },
-  'bus':            { ru: 'АВТОБУС',    emoji: '🚌', color: '#ffd700' },
-  'motorcycle':     { ru: 'МОТОЦИКЛ',  emoji: '🏍️',  color: '#ff4757' },
-  'bicycle':        { ru: 'ВЕЛОСИПЕД',  emoji: '🚲', color: '#2ed573' },
-  'airplane':       { ru: 'САМОЛЁТ',   emoji: '✈️',  color: '#87ceeb' },
-  'boat':           { ru: 'ЛОДКА',      emoji: '⛵', color: '#00d4ff' },
-  'train':          { ru: 'ПОЕЗД',      emoji: '🚂', color: '#7f8fa6' },
+  // Аксессуары
+  'backpack':            { ru: 'РЮКЗАК',           emoji: '🎒', color: '#9b8fd4' },
+  'umbrella':            { ru: 'ЗОНТ',             emoji: '☂️',  color: '#9b8fd4' },
+  'handbag':             { ru: 'СУМКА',            emoji: '👜', color: '#ff69b4' },
+  'tie':                 { ru: 'ГАЛСТУК',          emoji: '👔', color: '#00d4ff' },
+  'suitcase':            { ru: 'ЧЕМОДАН',          emoji: '🧳', color: '#7f8fa6' },
 
-  // Nature & outdoor
-  'potted plant':   { ru: 'ЦВЕТОК',     emoji: '🌿', color: '#2ed573' },
-  'vase':           { ru: 'ВАЗА',       emoji: '💐', color: '#ff69b4' },
-  'umbrella':       { ru: 'ЗОНТИК',     emoji: '☂️',  color: '#9b8fd4' },
-  'bench':          { ru: 'СКАМЕЙКА',   emoji: '🪑', color: '#d4a96a' },
-  'fire hydrant':   { ru: 'ГИДРАНТ',    emoji: '🚒', color: '#ff4757' },
-  'stop sign':      { ru: 'СТОП',       emoji: '🛑', color: '#ff4757' },
-  'traffic light':  { ru: 'СВЕТОФОР',   emoji: '🚦', color: '#ffd700' },
-  'parking meter':  { ru: 'ПАРКОМАТ',   emoji: '🅿️',  color: '#00d4ff' },
-  'kite':           { ru: 'ВОЗДУШНЫЙ ЗМЕЙ', emoji: '🪁', color: '#ff8c00' },
+  // Спорт
+  'frisbee':             { ru: 'ФРИСБИ',           emoji: '🥏', color: '#ff8c00' },
+  'skis':                { ru: 'ЛЫЖИ',             emoji: '⛷️',  color: '#aad4ff' },
+  'snowboard':           { ru: 'СНОУБОРД',         emoji: '🏂', color: '#aad4ff' },
+  'sports ball':         { ru: 'МЯЧ',              emoji: '⚽', color: '#ff8c00' },
+  'kite':                { ru: 'ВОЗДУШНЫЙ ЗМЕЙ',   emoji: '🪁', color: '#ff8c00' },
+  'baseball bat':        { ru: 'БЕЙСБОЛЬНАЯ БИТА', emoji: '⚾', color: '#d4a96a' },
+  'baseball glove':      { ru: 'БЕЙСБ. ПЕРЧАТКА',  emoji: '🥊', color: '#d4a96a' },
+  'skateboard':          { ru: 'СКЕЙТБОРД',        emoji: '🛹', color: '#7ecba1' },
+  'surfboard':           { ru: 'СЁРФБОРД',         emoji: '🏄', color: '#00d4ff' },
+  'tennis racket':       { ru: 'РАКЕТКА',          emoji: '🎾', color: '#ffd700' },
 
-  // Sports & leisure
-  'sports ball':    { ru: 'МЯЧ',        emoji: '⚽', color: '#ff8c00' },
-  'frisbee':        { ru: 'ФРИСБИ',     emoji: '🥏', color: '#ff8c00' },
-  'skis':           { ru: 'ЛЫЖИ',       emoji: '⛷️',  color: '#aad4ff' },
-  'snowboard':      { ru: 'СНОУБОРД',   emoji: '🏂', color: '#aad4ff' },
-  'baseball bat':   { ru: 'БИТА',       emoji: '⚾', color: '#d4a96a' },
-  'baseball glove': { ru: 'ПЕРЧАТКА',   emoji: '🥊', color: '#d4a96a' },
-  'skateboard':     { ru: 'СКЕЙТБОРД',  emoji: '🛹', color: '#7ecba1' },
-  'surfboard':      { ru: 'СЁРФБОРД',   emoji: '🏄', color: '#00d4ff' },
-  'tennis racket':  { ru: 'РАКЕТКА',    emoji: '🎾', color: '#ffd700' },
+  // Кухня / посуда
+  'bottle':              { ru: 'БУТЫЛКА',          emoji: '🍾', color: '#7ecba1' },
+  'wine glass':          { ru: 'БОКАЛ',            emoji: '🍷', color: '#c0392b' },
+  'cup':                 { ru: 'КРУЖКА',           emoji: '☕', color: '#d4813c' },
+  'fork':                { ru: 'ВИЛКА',            emoji: '🍴', color: '#c0c0c0' },
+  'knife':               { ru: 'НОЖ',              emoji: '🔪', color: '#c0c0c0' },
+  'spoon':               { ru: 'ЛОЖКА',            emoji: '🥄', color: '#c0c0c0' },
+  'bowl':                { ru: 'МИСКА',            emoji: '🥣', color: '#7ecba1' },
 
-  // Accessories & personal
-  'backpack':       { ru: 'РЮКЗАК',     emoji: '🎒', color: '#9b8fd4' },
-  'umbrella':       { ru: 'ЗОНТ',       emoji: '☂️',  color: '#9b8fd4' },
-  'handbag':        { ru: 'СУМКА',      emoji: '👜', color: '#ff69b4' },
-  'tie':            { ru: 'ГАЛСТУК',    emoji: '👔', color: '#00d4ff' },
-  'suitcase':       { ru: 'ЧЕМОДАН',    emoji: '🧳', color: '#7f8fa6' },
-  'book':           { ru: 'КНИГА',      emoji: '📚', color: '#ff8c42' },
-  'scissors':       { ru: 'НОЖНИЦЫ',    emoji: '✂️',  color: '#c0c0c0' },
-  'teddy bear':     { ru: 'МИШКА',      emoji: '🧸', color: '#d4a96a' },
-  'hair drier':     { ru: 'ФЕНI',       emoji: '💨', color: '#ff69b4' },
-  'toothbrush':     { ru: 'ЗУБНАЯ ЩЁТКА', emoji:'🦷', color: '#aad4ff' },
-  'cell phone':     { ru: 'ТЕЛЕФОН',    emoji: '📱', color: '#00ff88' },
+  // Еда
+  'banana':              { ru: 'БАНАН',            emoji: '🍌', color: '#ffd700' },
+  'apple':               { ru: 'ЯБЛОКО',           emoji: '🍎', color: '#ff4757' },
+  'sandwich':            { ru: 'БУТЕРБРОД',        emoji: '🥪', color: '#d4b896' },
+  'orange':              { ru: 'АПЕЛЬСИН',         emoji: '🍊', color: '#ff8c00' },
+  'broccoli':            { ru: 'БРОККОЛИ',         emoji: '🥦', color: '#2ed573' },
+  'carrot':              { ru: 'МОРКОВЬ',          emoji: '🥕', color: '#ff6348' },
+  'hot dog':             { ru: 'ХОТДОГ',           emoji: '🌭', color: '#ff6b35' },
+  'pizza':               { ru: 'ПИЦЦА',            emoji: '🍕', color: '#ff6b35' },
+  'donut':               { ru: 'ПОНЧИК',           emoji: '🍩', color: '#ff69b4' },
+  'cake':                { ru: 'ТОРТ',             emoji: '🎂', color: '#ff69b4' },
+
+  // Мебель / интерьер
+  'chair':               { ru: 'СТУЛ',             emoji: '🪑', color: '#00d4ff' },
+  'couch':               { ru: 'ДИВАН',            emoji: '🛋️',  color: '#00d4ff' },
+  'potted plant':        { ru: 'ЦВЕТОК',           emoji: '🌿', color: '#2ed573' },
+  'bed':                 { ru: 'КРОВАТЬ',          emoji: '🛏️',  color: '#9b8fd4' },
+  'dining table':        { ru: 'СТОЛ',             emoji: '🪵', color: '#7ecba1' },
+  'toilet':              { ru: 'УНИТАЗ',           emoji: '🚽', color: '#aad4ff' },
+
+  // Электроника
+  'tv':                  { ru: 'ТЕЛЕВИЗОР',        emoji: '📺', color: '#00ff88' },
+  'laptop':              { ru: 'НОУТБУК',          emoji: '💻', color: '#00ff88' },
+  'mouse':               { ru: 'МЫШКА',            emoji: '🖱️',  color: '#00ff88' },
+  'remote':              { ru: 'ПУЛЬТ',            emoji: '📡', color: '#00ff88' },
+  'keyboard':            { ru: 'КЛАВИАТУРА',       emoji: '⌨️',  color: '#00ff88' },
+  'cell phone':          { ru: 'ТЕЛЕФОН',          emoji: '📱', color: '#00ff88' },
+  'microwave':           { ru: 'МИКРОВОЛНОВКА',    emoji: '📻', color: '#00d4ff' },
+  'oven':                { ru: 'ДУХОВКА',          emoji: '🥘', color: '#ff8c42' },
+  'toaster':             { ru: 'ТОСТЕР',           emoji: '🍞', color: '#f4a460' },
+  'sink':                { ru: 'РАКОВИНА',         emoji: '🚿', color: '#7ecba1' },
+  'refrigerator':        { ru: 'ХОЛОДИЛЬНИК',      emoji: '🧊', color: '#aad4ff' },
+  'book':                { ru: 'КНИГА',            emoji: '📚', color: '#ff8c42' },
+  'clock':               { ru: 'ЧАСЫ',             emoji: '🕐', color: '#ffd700' },
+  'vase':                { ru: 'ВАЗА',             emoji: '💐', color: '#ff69b4' },
+  'scissors':            { ru: 'НОЖНИЦЫ',          emoji: '✂️',  color: '#c0c0c0' },
+  'teddy bear':          { ru: 'МИШКА',            emoji: '🧸', color: '#d4a96a' },
+  'hair drier':          { ru: 'ФЕН',              emoji: '💨', color: '#ff69b4' },
+  'toothbrush':          { ru: 'ЗУБНАЯ ЩЁТКА',     emoji: '🦷', color: '#aad4ff' },
 };
 
 // ──────────────────────────────────────────────
@@ -618,7 +620,7 @@ async function detect() {
   if (model && video.readyState === 4 && video.videoWidth > 0) {
     let preds;
     try {
-      preds = await model.detect(video, 12, 0.60);
+      preds = await model.detect(video, 12, 0.70);
     } catch(e) {
       requestAnimationFrame(detect);
       return;
@@ -708,7 +710,7 @@ function updateRegistry(predictions, now) {
 
   // Remove stale boxes
   for (const [id, data] of registry) {
-    if (!active.has(id) && now - data.lastSeen > 250) {
+    if (!active.has(id) && now - data.lastSeen > 1500) {
       const el = data.el;
       el.classList.add('leaving');
       registry.delete(id);
