@@ -649,9 +649,9 @@ function updateRegistry(predictions, now) {
   const active = new Set();
 
   predictions.forEach(p => {
-    // Grid-based ID to distinguish nearby same-class objects
-    const gridX = Math.round(p.bbox[0] / 60);
-    const gridY = Math.round(p.bbox[1] / 60);
+    // Grid-based ID — крупная сетка чтобы не кучиться
+    const gridX = Math.round(p.bbox[0] / 120);
+    const gridY = Math.round(p.bbox[1] / 120);
     const id = `${p.class}-${gridX}-${gridY}`;
     active.add(id);
 
@@ -710,7 +710,7 @@ function updateRegistry(predictions, now) {
 
   // Remove stale boxes
   for (const [id, data] of registry) {
-    if (!active.has(id) && now - data.lastSeen > 1500) {
+    if (!active.has(id) && now - data.lastSeen > 500) {
       const el = data.el;
       el.classList.add('leaving');
       registry.delete(id);
