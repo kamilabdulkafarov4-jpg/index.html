@@ -64,101 +64,100 @@
     100% { background-position: 0 100px; }
   }
 
-  #overlay { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
+  #overlay { position: fixed; inset: 0; z-index: 10; pointer-events: auto; }
 
-  /* ── Bounding box ── */
+  /* ── Dot (collapsed state) ── */
   .box {
     position: absolute;
-    border: 2px solid transparent;
-    border-radius: 8px;
-    pointer-events: none;
-    will-change: transform, opacity;
-    transition: left 0.35s ease, top 0.35s ease,
-                width 0.35s ease, height 0.35s ease;
+    pointer-events: auto;
+    cursor: pointer;
+    will-change: left, top, width, height;
+    transition: left 0.5s cubic-bezier(0.25,0.1,0.25,1),
+                top  0.5s cubic-bezier(0.25,0.1,0.25,1),
+                width 0.5s cubic-bezier(0.25,0.1,0.25,1),
+                height 0.5s cubic-bezier(0.25,0.1,0.25,1);
   }
 
-  /* Animated corner brackets */
-  .box::before, .box::after {
+  /* The white circle that sits at center of bbox */
+  .dot {
+    position: absolute;
+    width: 18px; height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.25);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+  }
+
+  /* The square frame — hidden by default */
+  .frame {
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    border: 2px solid #fff;
+    opacity: 0;
+    transition: opacity 0.35s ease, border-radius 0.35s ease;
+    pointer-events: none;
+  }
+
+  /* Corner brackets */
+  .frame::before, .frame::after,
+  .corner-tr, .corner-bl {
     content: '';
     position: absolute;
-    width: 16px; height: 16px;
-    border-color: inherit;
+    width: 14px; height: 14px;
+    border-color: #fff;
     border-style: solid;
-    transition: all 0.3s ease;
   }
-  .box::before {
+  .frame::before {
     top: -2px; left: -2px;
     border-width: 3px 0 0 3px;
     border-top-left-radius: 6px;
   }
-  .box::after {
+  .frame::after {
     bottom: -2px; right: -2px;
     border-width: 0 3px 3px 0;
     border-bottom-right-radius: 6px;
   }
-
-  /* Corner brackets via pseudo-elements on inner spans */
-  .box .corner-tr,
-  .box .corner-bl {
+  .corner-tr {
     position: absolute;
-    width: 16px; height: 16px;
-    border-style: solid;
-    border-color: inherit;
-    pointer-events: none;
-  }
-  .box .corner-tr {
     top: -2px; right: -2px;
     border-width: 3px 3px 0 0;
     border-top-right-radius: 6px;
   }
-  .box .corner-bl {
+  .corner-bl {
+    position: absolute;
     bottom: -2px; left: -2px;
     border-width: 0 0 3px 3px;
     border-bottom-left-radius: 6px;
   }
 
-  /* Appear animation */
-  @keyframes boxAppear {
-    0%   { opacity: 0; transform: scale(0.7); }
-    60%  { opacity: 1; transform: scale(1.04); }
-    100% { opacity: 1; transform: scale(1); }
-  }
-  @keyframes boxDisappear {
-    0%   { opacity: 1; transform: scale(1); }
-    100% { opacity: 0; transform: scale(0.75); }
-  }
-
-  .box.entering { animation: boxAppear 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards; }
-  .box.leaving  { animation: boxDisappear 0.25s ease-in forwards; }
-
-  /* Confidence pulse ring */
-  .box .pulse-ring {
+  /* Fill tint — hidden by default */
+  .box-fill {
     position: absolute;
-    inset: -8px;
-    border-radius: 12px;
-    border: 1px solid;
-    border-color: inherit;
+    inset: 0;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.07);
     opacity: 0;
-    animation: pulseRing 2s ease-out infinite;
-  }
-  @keyframes pulseRing {
-    0%   { inset: -4px; opacity: 0.6; }
-    100% { inset: -20px; opacity: 0; }
+    pointer-events: none;
+    transition: opacity 0.35s ease;
   }
 
-  /* Label */
+  /* Label — hidden by default */
   .label {
     position: absolute;
-    top: -36px; left: -2px;
+    top: -38px; left: 50%;
+    transform: translateX(-50%);
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     white-space: nowrap;
-    animation: labelSlide 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
-  }
-  @keyframes labelSlide {
-    0%   { opacity: 0; transform: translateY(8px); }
-    100% { opacity: 1; transform: translateY(0); }
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    transform: translateX(-50%) translateY(6px);
   }
 
   .label-text {
@@ -174,35 +173,57 @@
   }
 
   .label-conf {
-    background: rgba(0,0,0,0.7);
-    color: var(--color);
+    background: rgba(0,0,0,0.75);
+    color: #fff;
     padding: 3px 7px;
     font-size: 10px;
     font-weight: 600;
     border-radius: 4px;
-    border: 1px solid var(--color);
+    border: 1px solid rgba(255,255,255,0.3);
     letter-spacing: 0.05em;
+    transition: opacity 0.6s ease;
   }
 
-  /* Emoji badge */
   .label-emoji {
-    font-size: 16px;
-    filter: drop-shadow(0 0 4px rgba(255,255,255,0.3));
+    font-size: 15px;
   }
 
-  /* Fill tint */
-  .box-fill {
+  /* Pulse ring on dot */
+  .pulse-ring {
     position: absolute;
-    inset: 0;
-    border-radius: 6px;
-    background: var(--fill);
+    width: 18px; height: 18px;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.6);
+    opacity: 0;
     pointer-events: none;
-    animation: fillPulse 3s ease-in-out infinite;
+    animation: dotPulse 2.5s ease-out infinite;
   }
-  @keyframes fillPulse {
-    0%, 100% { opacity: 0.06; }
-    50%       { opacity: 0.14; }
+  @keyframes dotPulse {
+    0%   { width: 18px; height: 18px; opacity: 0.7; }
+    100% { width: 44px; height: 44px; opacity: 0; }
   }
+
+  /* ── EXPANDED state (tapped) ── */
+  .box.expanded .dot        { opacity: 0; transform: translate(-50%,-50%) scale(0.3); }
+  .box.expanded .frame      { opacity: 1; }
+  .box.expanded .box-fill   { opacity: 1; }
+  .box.expanded .label      { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .box.expanded .pulse-ring { animation: none; opacity: 0; }
+
+  /* Appear / disappear */
+  @keyframes boxAppear {
+    0%   { opacity: 0; transform: scale(0.5); }
+    70%  { opacity: 1; transform: scale(1.1); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes boxDisappear {
+    0%   { opacity: 1; }
+    100% { opacity: 0; transform: scale(0.6); }
+  }
+  .box.entering { animation: boxAppear 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+  .box.leaving  { animation: boxDisappear 0.25s ease-in forwards; }
 
   /* ── HUD ── */
   #hud {
@@ -681,8 +702,8 @@ function updateRegistry(predictions, now) {
       }
     });
 
-    // Порог совпадения — 0.15 (мягкий, т.к. камера двигается)
-    if (bestPred && bestScore > 0.15) {
+    // Порог совпадения — 0.08 (очень мягкий для стабильности)
+    if (bestPred && bestScore > 0.08) {
       matched.add(trackId);
       usedPreds.add(bestIdx);
 
@@ -696,9 +717,16 @@ function updateRegistry(predictions, now) {
       data.el.style.width  = (bestPred.bbox[2] * sw) + 'px';
       data.el.style.height = (bestPred.bbox[3] * sh) + 'px';
 
-      const conf = Math.round(bestPred.score * 100);
+      // трек обновлён выше
+      // Плавно обновляем проценты раз в ~0.6 сек
       const confEl = data.el.querySelector('.label-conf');
-      if (confEl) confEl.textContent = conf + '%';
+      if (confEl && data.el.classList.contains('expanded')) {
+        const newConf = Math.round(bestPred.score * 100) + '%';
+        if (confEl.textContent !== newConf) {
+          confEl.style.opacity = '0';
+          setTimeout(() => { confEl.textContent = newConf; confEl.style.opacity = '1'; }, 300);
+        }
+      }
     }
   }
 
@@ -717,15 +745,26 @@ function updateRegistry(predictions, now) {
     el.style.setProperty('--fill', entry.color);
     el.style.borderColor = entry.color;
     el.innerHTML = `
-      <div class="box-fill"></div>
+      <div class="dot"></div>
       <div class="pulse-ring"></div>
-      <span class="corner-tr"></span>
-      <span class="corner-bl"></span>
+      <div class="frame">
+        <span class="corner-tr"></span>
+        <span class="corner-bl"></span>
+      </div>
+      <div class="box-fill"></div>
       <div class="label">
         <span class="label-emoji">${entry.emoji}</span>
         <span class="label-text" style="background:${entry.color}">${entry.ru}</span>
-        <span class="label-conf" style="color:${entry.color};border-color:${entry.color}">${conf}%</span>
+        <span class="label-conf">${conf}%</span>
       </div>`;
+
+    // Tap to expand/collapse
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // collapse all others
+      document.querySelectorAll('.box.expanded').forEach(b => { if (b !== el) b.classList.remove('expanded'); });
+      el.classList.toggle('expanded');
+    });
     overlay.appendChild(el);
 
     el.style.left   = (p.bbox[0] * sw) + 'px';
@@ -742,7 +781,7 @@ function updateRegistry(predictions, now) {
 
   // 3. Удаляем треки которые давно не видели
   for (const [trackId, data] of registry) {
-    if (!matched.has(trackId) && now - data.lastSeen > 500) {
+    if (!matched.has(trackId) && now - data.lastSeen > 1000) {
       const el = data.el;
       el.classList.add('leaving');
       registry.delete(trackId);
@@ -792,6 +831,11 @@ function addTick(entry, conf) {
     }, 500);
   }, 3000);
 }
+
+// Close all expanded boxes when tapping background
+overlay.addEventListener('click', () => {
+  document.querySelectorAll('.box.expanded').forEach(b => b.classList.remove('expanded'));
+});
 
 // ──────────────────────────────────────────────
 //  GO
